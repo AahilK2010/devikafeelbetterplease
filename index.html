@@ -2,73 +2,64 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Devika's Daisy Game 🌼</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devika's Daisy Catch 🌼</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    text-align:center;
-    background:linear-gradient(135deg,#ffd1ec,#fff4c9);
-    overflow:hidden;
+margin:0;
+font-family:Arial, sans-serif;
+text-align:center;
+background:linear-gradient(135deg,#ffd6ec,#fff7cc);
 }
 
 h1{
-    margin-top:15px;
+margin-top:15px;
 }
 
-#info{
-    font-size:20px;
-    margin:10px;
+#hud{
+font-size:20px;
+margin:10px;
 }
 
 #gameArea{
-    width:100%;
-    height:65vh;
-    position:relative;
+width:100%;
+height:65vh;
+position:relative;
+overflow:hidden;
 }
 
-.daisy{
-    position:absolute;
-    font-size:45px;
-    cursor:pointer;
-    user-select:none;
-    transition:transform 0.1s;
-}
-
-.daisy:active{
-    transform:scale(1.3);
+.item{
+position:absolute;
+font-size:50px;
+cursor:pointer;
+user-select:none;
 }
 
 button{
-    padding:12px 25px;
-    font-size:18px;
-    border:none;
-    border-radius:12px;
-    background:#ff6fb1;
-    color:white;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#ff4fa0;
+padding:12px 24px;
+font-size:18px;
+border:none;
+border-radius:10px;
+background:#ff6fb1;
+color:white;
+cursor:pointer;
 }
 
 #endScreen{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(255,255,255,0.95);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    font-size:22px;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
+display:none;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+text-align:center;
+padding:20px;
 }
 
 </style>
@@ -77,11 +68,11 @@ button:hover{
 <body>
 
 <h1>🌼 Catch the Daisy 🌼</h1>
-<p>For Devika — catch as many daisies as you can!</p>
+<p>Devika, catch the daisies… but avoid the bombs! 💣</p>
 
-<div id="info">
+<div id="hud">
 Score: <span id="score">0</span> |
-Time: <span id="timer">20</span>
+Time: <span id="time">25</span>
 </div>
 
 <button onclick="startGame()">Start Game</button>
@@ -89,103 +80,138 @@ Time: <span id="timer">20</span>
 <div id="gameArea"></div>
 
 <div id="endScreen">
-<h2>🌼 Game Over 🌼</h2>
+
+<h2 id="resultTitle"></h2>
+
 <p id="finalScore"></p>
 
-<p style="max-width:400px">
-Devika, if you're seeing this, I just wanted to say  
-I hope this tiny game made you smile a little.  
+<p style="max-width:420px">
+Devika 🌼  
 
-You're amazing, and you deserve a whole field of daisies 🌼
+I made this tiny game just for you.  
+Whether you caught every daisy or clicked a bomb,  
+I hope this made you smile even a little.  
+
+You deserve a whole field of daisies.
 </p>
 
 <button onclick="location.reload()">Play Again</button>
+
 </div>
 
 <script>
 
-let score = 0
-let time = 20
-let spawnSpeed = 900
-let gameRunning = false
+let score=0
+let time=25
+let spawnRate=900
+let gameRunning=false
 
-const gameArea = document.getElementById("gameArea")
-const scoreText = document.getElementById("score")
-const timerText = document.getElementById("timer")
-const endScreen = document.getElementById("endScreen")
-const finalScore = document.getElementById("finalScore")
+let spawnInterval
+let timerInterval
 
-function random(min,max){
-    return Math.random()*(max-min)+min
-}
-
-function spawnDaisy(){
-
-    if(!gameRunning) return
-
-    const daisy = document.createElement("div")
-    daisy.className="daisy"
-    daisy.innerHTML="🌼"
-
-    const x=random(10,gameArea.clientWidth-60)
-    const y=random(10,gameArea.clientHeight-60)
-
-    daisy.style.left=x+"px"
-    daisy.style.top=y+"px"
-
-    daisy.onclick=()=>{
-
-        score++
-        scoreText.innerText=score
-
-        daisy.remove()
-
-        if(spawnSpeed>300){
-            spawnSpeed-=25
-        }
-
-    }
-
-    gameArea.appendChild(daisy)
-
-    setTimeout(()=>{
-        daisy.remove()
-    },1500)
-
-    setTimeout(spawnDaisy,spawnSpeed)
-}
+const scoreEl=document.getElementById("score")
+const timeEl=document.getElementById("time")
+const gameArea=document.getElementById("gameArea")
+const endScreen=document.getElementById("endScreen")
+const finalScore=document.getElementById("finalScore")
+const resultTitle=document.getElementById("resultTitle")
 
 function startGame(){
 
-    if(gameRunning) return
+if(gameRunning) return
 
-    gameRunning=true
-    score=0
-    time=20
-    spawnSpeed=900
+score=0
+time=25
+spawnRate=900
+gameRunning=true
 
-    scoreText.innerText=0
-    timerText.innerText=time
+scoreEl.textContent=score
+timeEl.textContent=time
 
-    spawnDaisy()
+spawnInterval=setInterval(spawnItem,spawnRate)
 
-    const countdown=setInterval(()=>{
+timerInterval=setInterval(()=>{
 
-        time--
-        timerText.innerText=time
+time--
+timeEl.textContent=time
 
-        if(time<=0){
+// speed up spawning
+if(spawnRate>300){
+spawnRate-=40
+clearInterval(spawnInterval)
+spawnInterval=setInterval(spawnItem,spawnRate)
+}
 
-            clearInterval(countdown)
-            gameRunning=false
+if(time<=0){
+endGame(false)
+}
 
-            finalScore.innerText="Your score: "+score+" daisies caught!"
+},1000)
 
-            endScreen.style.display="flex"
+}
 
-        }
+function spawnItem(){
 
-    },1000)
+if(!gameRunning) return
+
+const item=document.createElement("div")
+item.className="item"
+
+// 20% chance bomb
+const isBomb=Math.random()<0.2
+
+item.textContent=isBomb?"💣":"🌼"
+
+const x=Math.random()*(gameArea.clientWidth-50)
+const y=Math.random()*(gameArea.clientHeight-50)
+
+item.style.left=x+"px"
+item.style.top=y+"px"
+
+item.onclick=()=>{
+
+if(isBomb){
+
+endGame(true)
+
+}else{
+
+score++
+scoreEl.textContent=score
+item.remove()
+
+}
+
+}
+
+gameArea.appendChild(item)
+
+setTimeout(()=>{
+if(item.parentNode){
+item.remove()
+}
+},1500)
+
+}
+
+function endGame(bombClicked){
+
+clearInterval(spawnInterval)
+clearInterval(timerInterval)
+
+gameRunning=false
+
+document.querySelectorAll(".item").forEach(i=>i.remove())
+
+if(bombClicked){
+resultTitle.textContent="💣 Boom!"
+}else{
+resultTitle.textContent="🌼 Time's Up!"
+}
+
+finalScore.textContent="You caught "+score+" daisies!"
+
+endScreen.style.display="flex"
 
 }
 
