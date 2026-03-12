@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Devika's Daisy Game 🌼</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    text-align:center;
+    background:linear-gradient(135deg,#ffd1ec,#fff4c9);
+    overflow:hidden;
+}
+
+h1{
+    margin-top:15px;
+}
+
+#info{
+    font-size:20px;
+    margin:10px;
+}
+
+#gameArea{
+    width:100%;
+    height:65vh;
+    position:relative;
+}
+
+.daisy{
+    position:absolute;
+    font-size:45px;
+    cursor:pointer;
+    user-select:none;
+    transition:transform 0.1s;
+}
+
+.daisy:active{
+    transform:scale(1.3);
+}
+
+button{
+    padding:12px 25px;
+    font-size:18px;
+    border:none;
+    border-radius:12px;
+    background:#ff6fb1;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#ff4fa0;
+}
+
+#endScreen{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(255,255,255,0.95);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    font-size:22px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🌼 Catch the Daisy 🌼</h1>
+<p>For Devika — catch as many daisies as you can!</p>
+
+<div id="info">
+Score: <span id="score">0</span> |
+Time: <span id="timer">20</span>
+</div>
+
+<button onclick="startGame()">Start Game</button>
+
+<div id="gameArea"></div>
+
+<div id="endScreen">
+<h2>🌼 Game Over 🌼</h2>
+<p id="finalScore"></p>
+
+<p style="max-width:400px">
+Devika, if you're seeing this, I just wanted to say  
+I hope this tiny game made you smile a little.  
+
+You're amazing, and you deserve a whole field of daisies 🌼
+</p>
+
+<button onclick="location.reload()">Play Again</button>
+</div>
+
+<script>
+
+let score = 0
+let time = 20
+let spawnSpeed = 900
+let gameRunning = false
+
+const gameArea = document.getElementById("gameArea")
+const scoreText = document.getElementById("score")
+const timerText = document.getElementById("timer")
+const endScreen = document.getElementById("endScreen")
+const finalScore = document.getElementById("finalScore")
+
+function random(min,max){
+    return Math.random()*(max-min)+min
+}
+
+function spawnDaisy(){
+
+    if(!gameRunning) return
+
+    const daisy = document.createElement("div")
+    daisy.className="daisy"
+    daisy.innerHTML="🌼"
+
+    const x=random(10,gameArea.clientWidth-60)
+    const y=random(10,gameArea.clientHeight-60)
+
+    daisy.style.left=x+"px"
+    daisy.style.top=y+"px"
+
+    daisy.onclick=()=>{
+
+        score++
+        scoreText.innerText=score
+
+        daisy.remove()
+
+        if(spawnSpeed>300){
+            spawnSpeed-=25
+        }
+
+    }
+
+    gameArea.appendChild(daisy)
+
+    setTimeout(()=>{
+        daisy.remove()
+    },1500)
+
+    setTimeout(spawnDaisy,spawnSpeed)
+}
+
+function startGame(){
+
+    if(gameRunning) return
+
+    gameRunning=true
+    score=0
+    time=20
+    spawnSpeed=900
+
+    scoreText.innerText=0
+    timerText.innerText=time
+
+    spawnDaisy()
+
+    const countdown=setInterval(()=>{
+
+        time--
+        timerText.innerText=time
+
+        if(time<=0){
+
+            clearInterval(countdown)
+            gameRunning=false
+
+            finalScore.innerText="Your score: "+score+" daisies caught!"
+
+            endScreen.style.display="flex"
+
+        }
+
+    },1000)
+
+}
+
+</script>
+
+</body>
+</html>
